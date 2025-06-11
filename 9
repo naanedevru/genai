@@ -1,0 +1,34 @@
+PG 9
+!pip install wikipedia
+from pydantic import BaseModel
+from typing import List, Optional
+import wikipedia
+import re
+class InstitutionDetails(BaseModel):
+    name: str
+    founder: Optional[str]
+    founded_year: Optional[str]
+    branches: Optional[List[str]]
+    number_of_employees: Optional[str]
+    summary: str
+def extract_institution_details(name: str) -> InstitutionDetails:
+    try:
+        summary = wikipedia.summary(name, sentences=4)
+        content = wikipedia.page(name).content.lower()
+        founder = re.search(r"founder(?:s)?[:\-]?\s*(.*)", content)
+        founder_text = founder.group(1).split('\n')[0].strip() if founder else None
+        if founder_text and len(founder_text.split()) > 10:
+            founder_text = None
+
+        founded = re.search(r"(established|founded|formed)[^\d]{0,20}(\d{4})", content)
+        founded_year = founded.group(2) if founded else None
+        branch_match = re.search(r"(branches|departments)[:\-]?\s*(.+)", content)
+        branches = [b.strip() for b in branch_match.group(2).split(',')] if branch_match else None
+        employee_match = re.search(r"(employees|staff)[^\d]*(\d{1,3}(?:,\d{3})*|\d+)", content)
+        employees = employee_match.group(2) if employee_match else None
+        return InstitutionDetails( name=name, founder=founder_text, founded_year=founded_year, branches=branches, number_of_employees=employees, summary=summary )
+    except Exception as e:
+        return InstitutionDetails(name=name, founder=None, founded_year=None, branches=None, number_of_employees=None, summary=f"Could not fetch summary due to: {str(e)}" )
+if __name__ == "__main__":
+    inst = input("Enter Institution Name: ")
+    print(extract_institution_details(inst).model_dump_json(indent=4))
