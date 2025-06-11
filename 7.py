@@ -1,7 +1,6 @@
+PG 7
 from transformers import pipeline
-
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
 text = """
 The Hugging Face Transformers library provides a simple and consistent API for using a wide variety of pre-trained models
 for natural language processing tasks such as text classification, question answering, and summarization.
@@ -12,6 +11,5 @@ such as BART and T5. These models can be accessed through the summarization pipe
 high-quality summaries that are useful for a variety of applications, such as news aggregation, document review,
 and information retrieval.
 """
-
 summary = summarizer(text, max_length=100, min_length=30, do_sample=False)
 print("Summary:", summary[0]['summary_text'])
